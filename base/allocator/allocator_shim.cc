@@ -58,7 +58,6 @@ bool CallNewHandler(size_t size) {
 #if defined(OS_WIN)
   return base::allocator::WinCallNewHandler(size);
 #else
-  ALLOW_UNUSED_PARAM(size);
   // TODO(primiano): C++11 has introduced ::get_new_handler() which is supposed
   // to be thread safe and would avoid the spinlock boilerplate here. However
   // it doesn't seem to be available yet in the Linux chroot headers yet.
@@ -132,16 +131,7 @@ void InsertAllocatorDispatch(AllocatorDispatch* dispatch) {
     }
   }
 
-  // This function does not guarantee to be thread-safe w.r.t. concurrent
-  // insertions, but still has to guarantee that all the threads always
-  // see a consistent chain, hence the MemoryBarrier() below.
-  // InsertAllocatorDispatch() is NOT a fastpath, as opposite to malloc(), so
-  // we don't really want this to be a release-store with a corresponding
-  // acquire-load during malloc().
-  subtle::MemoryBarrier();
-
-  subtle::NoBarrier_Store(&g_chain_head,
-                          reinterpret_cast<subtle::AtomicWord>(dispatch));
+  CHECK(false);  // Too many retries, this shouldn't happen.
 }
 
 void RemoveAllocatorDispatchForTesting(AllocatorDispatch* dispatch) {
